@@ -1,16 +1,74 @@
-require("dotenv").config();
-
 const puppeteer = require("puppeteer");
-const { students } = require("./resources");
+const inquirer = require("inquirer");
+
+const { students } = require("./credentials");
 
 const { common, helpers } = require("./utils");
 
-const credentials = {
-  email: students.email,
-  password: students.password,
-};
+async function runDashboard() {
+  const initialChoice = await inquirer.prompt([
+    {
+      type: "list",
+      name: "action",
+      message: "🚀 Pilih tindakan:",
+      choices: [
+        {
+          name: "Start - Mulai proses otomasi",
+          value: "start",
+        },
+        {
+          name: "Exit - Keluar dari aplikasi",
+          value: "exit",
+        },
+      ],
+    },
+  ]);
 
-(async () => {
+  if (initialChoice.action === "exit") {
+    console.log("👋 Menutup aplikasi...");
+    process.exit(0);
+  }
+
+  const locationChoices = Object.entries(students.locationTest).map(
+    ([name, code]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value: code,
+    })
+  );
+
+  const jlptLevelChoices = [];
+  for (let i = 5; i >= 1; i--) {
+    jlptLevelChoices.push({
+      name: `N-${i}`,
+      value: i,
+    });
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: "list",
+      name: "location",
+      message: "📌 PILIH LOKASI UJIAN?",
+      choices: locationChoices,
+    },
+    {
+      type: "list",
+      name: "jlptLevel",
+      message: "🏗️ LEVEL JLPT?",
+      choices: jlptLevelChoices,
+    },
+  ]);
+
+  console.log("\n\x1b[41m\x1b[37m\x1b[1m PERHATIAN! \x1b[0m");
+  console.log(
+    "\x1b[33m\x1b[1m HARAP DIPERHATIKAN, INPUT PILIHAN HARUS DIISI SECARA MANUAL SEBELUM MENEKAN SUBMIT \x1b[0m"
+  );
+  console.log("\n\x1b[36m Sistem akan melanjutkan dalam 7 detik... \x1b[0m\n");
+
+  await new Promise((resolve) => setTimeout(resolve, 7000));
+
+  console.log("Melanjutkan proses otomasi...\n");
+
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: null,
@@ -31,8 +89,8 @@ const credentials = {
 
     console.log("#3. Filling login credentials...");
     await page.waitForSelector(".auth");
-    await page.type("#email", credentials.email);
-    await page.type("#password", credentials.password);
+    await page.type("#email", students.email);
+    await page.type("#password", students.password);
 
     console.log("#4. Submitting login form...");
     await Promise.all([
@@ -48,7 +106,7 @@ const credentials = {
 
     console.log("#4.2 Navigating to test page...");
     await page.goto(
-      `https://jlptonline.or.id/test?location=${students.locationTest.jakarta}&grade=${students.jlptLevel}`,
+      `https://jlptonline.or.id/test?location=${answers.location}&grade=${answers.jlptLevel}`,
       {
         waitUntil: "networkidle2",
       }
@@ -233,8 +291,37 @@ const credentials = {
 
     console.log("#12. CHECKBOX AGREEMENT SUCCESSFULLY SELECTED");
   } catch (error) {
-    console.error("Automation error:", error.message);
+    console.error("[AUTOMATION ERROR]:", error.message);
   } finally {
-    console.log("Automation process completed");
+    console.log("[AUTOMATION COMPLETED]: Press Ctrl+C to exit");
+    const finalChoice = await inquirer.prompt([
+      {
+        type: "list",
+        name: "action",
+        message: "🔄 Apa yang ingin Anda lakukan selanjutnya?",
+        choices: [
+          {
+            name: "Stay - Tetap di Terminal (tutup dengan Ctrl+C)",
+            value: "stay",
+          },
+          {
+            name: "Exit - Tutup browser dan keluar aplikasi",
+            value: "exit",
+          },
+        ],
+      },
+    ]);
+
+    if (finalChoice.action === "exit") {
+      console.log("🔚 Menutup browser dan mengakhiri aplikasi...");
+      if (browser) await browser.close();
+      process.exit(0);
+    } else {
+      console.log(
+        "✅ Browser tetap terbuka. Tekan Ctrl+C untuk keluar saat selesai."
+      );
+    }
   }
-})();
+}
+
+runDashboard();

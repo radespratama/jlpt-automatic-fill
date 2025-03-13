@@ -3,8 +3,6 @@ exports.students = {
   password: "Papazola123!",
   photo: null,
   name: "RUDI SITOMPUL",
-  email: "",
-  password: "",
   passcode: "84428410",
   profile: {
     birth_date: "10/03/2000",
