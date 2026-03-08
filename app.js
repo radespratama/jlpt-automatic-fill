@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
 const inquirer = require("inquirer");
 
-const { students } = require("./credentials");
+const { loadCredential } = require("./credentials");
 
 const { common, helpers } = require("./utils");
 
@@ -29,12 +29,25 @@ async function runDashboard() {
     process.exit(0);
   }
 
-  const locationChoices = Object.entries(students.locationTest).map(
-    ([name, code]) => ({
-      name: name.charAt(0).toUpperCase() + name.slice(1),
-      value: code,
-    })
-  );
+  const locationChoices = Object.entries({
+    jakarta: "2010101",
+    bandung: "2010201",
+    surabaya: "2010301",
+    medan: "2010401",
+    yogyakarta: "2010501",
+    padang: "2010601",
+    denpasar: "2010701",
+    manado: "2010801",
+    malang: "2010901",
+    semarang: "2011001",
+    makassar: "2011101",
+    palembang: "2011201",
+    cirebon: "2011301",
+    bogor: "2011401",
+  }).map(([name, code]) => ({
+    name: name.charAt(0).toUpperCase() + name.slice(1),
+    value: code,
+  }));
 
   const jlptLevelChoices = [];
   for (let i = 5; i >= 1; i--) {
@@ -57,11 +70,37 @@ async function runDashboard() {
       message: "🏗️ LEVEL JLPT?",
       choices: jlptLevelChoices,
     },
+    {
+      type: "list",
+      name: "credential",
+      message: "👤 Pilih credential yang ingin digunakan?",
+      choices: async () => {
+        const fs = require("fs");
+        const path = require("path");
+        const PRIVATE_DIR = path.join(__dirname, "credentials", "private");
+        const files = fs
+          .readdirSync(PRIVATE_DIR)
+          .filter((f) => f.endsWith(".json"));
+
+        if (files.length === 0) {
+          throw new Error(
+            "Tidak ada file credentials ditemukan di folder credentials/private/",
+          );
+        }
+
+        return files.map((f) => ({
+          name: f.replace(".json", ""),
+          value: f,
+        }));
+      },
+    },
   ]);
+
+  const students = await loadCredential(answers.credential);
 
   console.log("\n\x1b[41m\x1b[37m\x1b[1m PERHATIAN! \x1b[0m");
   console.log(
-    "\x1b[33m\x1b[1m HARAP DIPERHATIKAN, INPUT PILIHAN HARUS DIISI SECARA MANUAL SEBELUM MENEKAN SUBMIT \x1b[0m"
+    "\x1b[33m\x1b[1m HARAP DIPERHATIKAN, INPUT PILIHAN HARUS DIISI SECARA MANUAL SEBELUM MENEKAN SUBMIT \x1b[0m",
   );
   console.log("\n\x1b[36m Sistem akan melanjutkan dalam 7 detik... \x1b[0m\n");
 
@@ -109,7 +148,7 @@ async function runDashboard() {
       `https://jlptonline.or.id/test?location=${answers.location}&grade=${answers.jlptLevel}`,
       {
         waitUntil: "networkidle2",
-      }
+      },
     );
 
     console.log("#5. Clicking test button...");
@@ -154,7 +193,7 @@ async function runDashboard() {
       } catch (error) {
         await page.evaluate(() => {
           const modalButton = document.querySelector(
-            'button.themeBtn.themeBtn--wide.w-100[data-bs-dismiss="modal"]'
+            'button.themeBtn.themeBtn--wide.w-100[data-bs-dismiss="modal"]',
           );
           if (modalButton) modalButton.click();
         });
@@ -168,9 +207,9 @@ async function runDashboard() {
         page
           .waitForSelector(field, { timeout: 5000 })
           .catch((err) =>
-            console.warn(`Field ${field} not found: ${err.message}`)
-          )
-      )
+            console.warn(`Field ${field} not found: ${err.message}`),
+          ),
+      ),
     );
 
     console.log("#8. Filling form fields...");
@@ -318,7 +357,7 @@ async function runDashboard() {
       process.exit(0);
     } else {
       console.log(
-        "✅ Browser tetap terbuka. Tekan Ctrl+C untuk keluar saat selesai."
+        "✅ Browser tetap terbuka. Tekan Ctrl+C untuk keluar saat selesai.",
       );
     }
   }

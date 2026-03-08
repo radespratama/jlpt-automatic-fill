@@ -10,7 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "inquirer": "^8.2.6",
-    "puppeteer": "^24.4.0"
+    "inquirer": "^8.2.7",
+    "puppeteer": "^24.38.0"
   }
 }
