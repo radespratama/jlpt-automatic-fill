@@ -1,9 +1,12 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-extra");
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
 const inquirer = require("inquirer");
 
 const { loadCredential } = require("./credentials");
 
 const { common, helpers } = require("./utils");
+
+puppeteer.use(StealthPlugin());
 
 async function runDashboard() {
   const initialChoice = await inquirer.prompt([
@@ -125,17 +128,21 @@ async function runDashboard() {
     await page.goto("https://jlptonline.or.id/signin", {
       waitUntil: "networkidle2",
     });
+    await common.waitForCloudflare(page, 60000000);
 
     console.log("#3. Filling login credentials...");
     await page.waitForSelector(".auth");
     await page.type("#email", students.email);
     await page.type("#password", students.password);
 
-    console.log("#4. Submitting login form...");
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle2" }),
-      page.click('button[type="submit"]'),
-    ]);
+    console.log("\n\x1b[43m\x1b[30m\x1b[1m RECAPTCHA \x1b[0m");
+    console.log("\x1b[36m Email & password sudah terisi. \x1b[0m");
+    console.log("\x1b[36m Silakan selesaikan reCAPTCHA lalu klik tombol Login secara manual. \x1b[0m");
+    console.log("\x1b[33m Automation akan otomatis melanjutkan setelah login berhasil... \x1b[0m\n");
+
+    console.log("#4. Menunggu login manual...");
+    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 120000 });
+    await common.waitForCloudflare(page, 60000000);
 
     if (await page.$(".auth")) {
       throw new Error("#4.1 😒 Login failed - auth form still present");
@@ -150,6 +157,7 @@ async function runDashboard() {
         waitUntil: "networkidle2",
       },
     );
+    await common.waitForCloudflare(page);
 
     console.log("#5. Clicking test button...");
     await page.waitForSelector("a.themeBtn--outline.themeBtn--wide.w-100");
@@ -223,6 +231,59 @@ async function runDashboard() {
     await page.type("#alamat", students?.address?.street || "");
 
     await common.setDateInput(page, students?.profile?.birth_date || "");
+
+    console.log("#8.1 Selecting dropdown fields...");
+    await common.setChoicesSelectByValue(page, "jenis_kelamin", students?.profile?.gender || "");
+    await common.setChoicesSelectByValue(page, "bahasa", students?.profile?.language_id || "");
+    await common.setChoicesSelectByValue(page, "provinsi", students?.address?.province || "");
+
+    // Tunggu opsi kota ter-load secara dinamis setelah provinsi dipilih
+    console.log("#8.1.1 Menunggu opsi kota ter-load...");
+    try {
+      await page.waitForFunction(
+        (targetCityId) => {
+          const listbox = document
+            .getElementById(targetCityId)
+            ?.closest(".choices")
+            ?.querySelector(".choices__list--dropdown .choices__list[role='listbox']");
+          // Pastikan sudah ada minimal 1 item kota selain placeholder (data-value != "0")
+          return !!listbox?.querySelector(
+            '.choices__item[data-choice-selectable][data-value]:not([data-value="0"])'
+          );
+        },
+        { timeout: 10000 },
+        "city"
+      );
+      console.log("#8.1.1 Opsi kota sudah ter-load");
+    } catch {
+      console.warn("⚠️ Opsi kota belum ter-load dalam 10s, tetap lanjut...");
+    }
+
+    await common.setChoicesSelectByValue(page, "city", students?.address?.city_id || "");
+    await common.setChoicesSelectByValue(page, "course_place", students?.profile?.course_place || "");
+    await common.setChoicesSelectByValue(page, "reason", students?.profile?.reason || "");
+    await common.setChoicesSelectByValue(page, "profession", students?.profile?.profession || "");
+
+    if (students?.profile?.use) {
+      console.log("#8.2 Waiting for #use select to become active after profession...");
+      try {
+        await page.waitForFunction(
+          () => {
+            const useEl = document.getElementById("use");
+            const wrapper = useEl?.closest(".choices");
+            return (
+              useEl &&
+              !useEl.disabled &&
+              !wrapper?.classList.contains("is-disabled")
+            );
+          },
+          { timeout: 3000 }
+        );
+      } catch {
+        console.warn("⚠️ Select #use belum aktif setelah 3s, skip");
+      }
+      await common.setChoicesSelectByValue(page, "use", students?.profile?.use);
+    }
 
     console.log("#9. Selecting checkboxes (Buku, Animasi, Komik)...");
 

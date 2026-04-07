@@ -5,6 +5,72 @@ const moduleExport = {
     delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   },
   common: {
+    waitForCloudflare: async (page, timeout = 300000) => {
+      const pollInterval = 1000;
+      const logInterval = 5000;
+      const startTime = Date.now();
+      let lastLogTime = 0;
+      let detected = false;
+
+      while (Date.now() - startTime < timeout) {
+        const blockingInfo = await page
+          .evaluate(() => {
+            const title = document.title.toLowerCase();
+            const cfTitle =
+              title.includes("just a moment") ||
+              title.includes("checking your browser") ||
+              title.includes("attention required") ||
+              title.includes("cloudflare");
+
+            const cfElement =
+              !!document.getElementById("challenge-form") ||
+              !!document.getElementById("cf-challenge-running") ||
+              !!document.getElementById("challenge-running") ||
+              !!document.querySelector(".cf-browser-verification") ||
+              !!document.querySelector("[data-cf-settings]") ||
+              !!document.querySelector("meta[name='cf-bypass-status']");
+
+            const queueElement =
+              !!document.getElementById("waitTime") ||
+              !!document.getElementById("last-updated");
+
+            const isBlocking = cfTitle || cfElement || queueElement;
+
+            let type = null;
+            if (cfTitle || cfElement) type = "cloudflare";
+            else if (queueElement) type = "queue";
+
+            return { isBlocking, type };
+          })
+          .catch(() => ({ isBlocking: false, type: null }));
+
+        if (!blockingInfo.isBlocking) {
+          if (detected) {
+            console.log("✅ Halaman blocking selesai, melanjutkan proses...");
+          }
+          return true;
+        }
+
+        detected = true;
+        const now = Date.now();
+        if (now - lastLogTime >= logInterval) {
+          const elapsed = Math.round((now - startTime) / 1000);
+          const label =
+            blockingInfo.type === "queue"
+              ? "antrian virtual"
+              : "Cloudflare challenge";
+          console.log(`⏳ Menunggu ${label} selesai... (${elapsed}s berlalu)`);
+          lastLogTime = now;
+        }
+
+        await moduleExport.helpers.delay(pollInterval);
+      }
+
+      console.warn(
+        "⚠️ Timeout menunggu halaman blocking. Melanjutkan proses meski belum pasti selesai...",
+      );
+      return false;
+    },
     setSelectedCheckbox: async (page, options) => {
       const { checkboxIds, isExclusive, duration = 1000 } = options;
 
@@ -20,7 +86,7 @@ const moduleExport = {
 
       console.log(
         `Processing ${isExclusive ? "EXCLUSIVE" : "REGULAR"} checkbox group:`,
-        checkboxIds
+        checkboxIds,
       );
 
       if (isExclusive) {
@@ -53,7 +119,7 @@ const moduleExport = {
                 await page.click(`#${lastId}`);
               }
               console.log(
-                `✅ Last checkbox #${lastId} checked (exclusive mode)`
+                `✅ Last checkbox #${lastId} checked (exclusive mode)`,
               );
             } catch (clickError) {
               await page.evaluate((id) => {
@@ -61,17 +127,17 @@ const moduleExport = {
                 if (checkbox) {
                   checkbox.checked = true;
                   checkbox.dispatchEvent(
-                    new Event("change", { bubbles: true })
+                    new Event("change", { bubbles: true }),
                   );
                 }
               }, lastId);
               console.log(
-                `✅ Last checkbox #${lastId} checked via JavaScript (exclusive mode)`
+                `✅ Last checkbox #${lastId} checked via JavaScript (exclusive mode)`,
               );
             }
           } else {
             console.log(
-              `✅ Last checkbox #${lastId} already checked (exclusive mode)`
+              `✅ Last checkbox #${lastId} already checked (exclusive mode)`,
             );
           }
 
@@ -86,12 +152,12 @@ const moduleExport = {
               }
             }, id);
             console.log(
-              `🔒 Checkbox #${id} disabled and unchecked (exclusive mode)`
+              `🔒 Checkbox #${id} disabled and unchecked (exclusive mode)`,
             );
           }
         } catch (error) {
           console.log(
-            `❌ Failed to process exclusive checkbox group: ${error.message}`
+            `❌ Failed to process exclusive checkbox group: ${error.message}`,
           );
         }
         return;
@@ -138,7 +204,7 @@ const moduleExport = {
 
           if (isChecked) {
             console.log(
-              `✅ Checkbox #${id} successfully checked (label click).`
+              `✅ Checkbox #${id} successfully checked (label click).`,
             );
           } else {
             throw new Error("Checkbox not checked after label click");
@@ -157,7 +223,7 @@ const moduleExport = {
 
             if (isChecked) {
               console.log(
-                `✅ Checkbox #${id} successfully checked (direct click).`
+                `✅ Checkbox #${id} successfully checked (direct click).`,
               );
             } else {
               throw new Error("Checkbox not checked after direct click");
@@ -176,14 +242,14 @@ const moduleExport = {
 
               if (jsResult) {
                 console.log(
-                  `✅ Checkbox #${id} successfully checked (JavaScript).`
+                  `✅ Checkbox #${id} successfully checked (JavaScript).`,
                 );
               } else {
                 console.log(`❌ All methods failed for checkbox #${id}.`);
               }
             } catch (jsError) {
               console.log(
-                `❌ JavaScript method failed for #${id}: ${jsError.message}`
+                `❌ JavaScript method failed for #${id}: ${jsError.message}`,
               );
             }
           }
@@ -202,13 +268,13 @@ const moduleExport = {
       console.log("Final checkbox statuses:", finalCheckStatus);
 
       const allChecked = Object.values(finalCheckStatus).every(
-        (status) => status === true
+        (status) => status === true,
       );
 
       if (!allChecked) {
         console.warn(
           "⚠️ Warning: Some checkboxes could not be selected:",
-          finalCheckStatus
+          finalCheckStatus,
         );
       } else {
         console.log("✅ All checkboxes successfully selected");
@@ -216,7 +282,7 @@ const moduleExport = {
     },
     setCheckAgreementBox: async (page, timeout = 2000) => {
       console.log(
-        "🔍 Mencoba mencentang checkbox persetujuan 'saya-setuju'..."
+        "🔍 Mencoba mencentang checkbox persetujuan 'saya-setuju'...",
       );
 
       try {
@@ -250,7 +316,7 @@ const moduleExport = {
 
           if (isCheckedAfterLabelClick) {
             console.log(
-              "✅ Checkbox persetujuan berhasil dicentang (via label)"
+              "✅ Checkbox persetujuan berhasil dicentang (via label)",
             );
             return true;
           }
@@ -269,14 +335,14 @@ const moduleExport = {
 
           if (isCheckedAfterDirectClick) {
             console.log(
-              "✅ Checkbox persetujuan berhasil dicentang (via direct click)"
+              "✅ Checkbox persetujuan berhasil dicentang (via direct click)",
             );
             return true;
           }
         } catch (clickError) {
           console.log(
             "⚠️ Klik langsung pada checkbox gagal:",
-            clickError.message
+            clickError.message,
           );
         }
 
@@ -304,18 +370,18 @@ const moduleExport = {
 
         if (jsResult) {
           console.log(
-            "✅ Checkbox persetujuan berhasil dicentang (via JavaScript)"
+            "✅ Checkbox persetujuan berhasil dicentang (via JavaScript)",
           );
           return true;
         }
 
         console.error(
-          "❌ Semua metode gagal untuk mencentang checkbox persetujuan"
+          "❌ Semua metode gagal untuk mencentang checkbox persetujuan",
         );
         return false;
       } catch (error) {
         console.error(
-          `❌ Error saat mencoba mencentang persetujuan: ${error.message}`
+          `❌ Error saat mencoba mencentang persetujuan: ${error.message}`,
         );
         return false;
       }
@@ -324,16 +390,16 @@ const moduleExport = {
       page,
       dateValue,
       inputId = "tanggal_lahir",
-      timeout = 5000
+      timeout = 5000,
     ) => {
       console.log(
-        `🔍 Mencoba mengisi input tanggal #${inputId} dengan nilai "${dateValue}"...`
+        `🔍 Mencoba mengisi input tanggal #${inputId} dengan nilai "${dateValue}"...`,
       );
 
       try {
         if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateValue)) {
           console.error(
-            "❌ Format tanggal tidak valid, gunakan format dd/mm/yyyy"
+            "❌ Format tanggal tidak valid, gunakan format dd/mm/yyyy",
           );
           return false;
         }
@@ -344,7 +410,7 @@ const moduleExport = {
 
         if (!inputExists) {
           console.error(
-            `❌ Input tanggal dengan ID #${inputId} tidak ditemukan`
+            `❌ Input tanggal dengan ID #${inputId} tidak ditemukan`,
           );
           return false;
         }
@@ -371,12 +437,12 @@ const moduleExport = {
 
           if (inputValue === dateValue) {
             console.log(
-              `✅ Berhasil mengisi tanggal "${dateValue}" dengan input langsung`
+              `✅ Berhasil mengisi tanggal "${dateValue}" dengan input langsung`,
             );
             inputSuccess = true;
           } else {
             console.log(
-              `⚠️ Input langsung tidak berhasil, nilai terisi: "${inputValue}"`
+              `⚠️ Input langsung tidak berhasil, nilai terisi: "${inputValue}"`,
             );
           }
         } catch (inputError) {
@@ -425,10 +491,8 @@ const moduleExport = {
                 const input = document.getElementById(id);
                 if (!input) return false;
 
-                // Set value langsung
                 input.value = value;
 
-                // Trigger events
                 input.dispatchEvent(new Event("input", { bubbles: true }));
                 input.dispatchEvent(new Event("change", { bubbles: true }));
 
@@ -439,18 +503,18 @@ const moduleExport = {
               }
             },
             inputId,
-            dateValue
+            dateValue,
           );
 
           if (jsResult) {
             console.log(
-              `✅ Berhasil mengisi tanggal "${dateValue}" dengan JavaScript`
+              `✅ Berhasil mengisi tanggal "${dateValue}" dengan JavaScript`,
             );
             return true;
           }
 
           console.error(
-            `❌ Semua metode gagal untuk mengisi tanggal "${dateValue}"`
+            `❌ Semua metode gagal untuk mengisi tanggal "${dateValue}"`,
           );
           return false;
         } catch (error) {
@@ -459,6 +523,306 @@ const moduleExport = {
         }
       } catch (generalError) {
         console.error(`❌ Error umum: ${generalError.message}`);
+        return false;
+      }
+    },
+    setChoicesSelectByValue: async (page, selectId, value) => {
+      const strValue = String(value);
+      console.log(
+        `🔍 Memilih opsi pada select #${selectId} dengan value "${strValue}"...`,
+      );
+
+      try {
+        const selectExists = await page.evaluate(
+          (id) => !!document.getElementById(id),
+          selectId,
+        );
+        if (!selectExists) {
+          console.error(`❌ Select #${selectId} tidak ditemukan`);
+          return false;
+        }
+
+        const currentValue = await page.evaluate(
+          (id) => document.getElementById(id)?.value ?? null,
+          selectId,
+        );
+        if (currentValue === strValue) {
+          console.log(
+            `✅ Select #${selectId} sudah memiliki value "${strValue}", skip`,
+          );
+          return true;
+        }
+
+        const innerHandle = await page.evaluateHandle((id) => {
+          return (
+            document
+              .getElementById(id)
+              ?.closest(".choices")
+              ?.querySelector(".choices__inner") ?? null
+          );
+        }, selectId);
+
+        const innerEl = innerHandle.asElement();
+        if (!innerEl) {
+          console.error(
+            `❌ .choices__inner tidak ditemukan untuk #${selectId}`,
+          );
+          return false;
+        }
+        await innerEl.click();
+
+        try {
+          await page.waitForFunction(
+            (id) => {
+              const wrapper = document.getElementById(id)?.closest(".choices");
+              const dropdown = wrapper?.querySelector(
+                ".choices__list--dropdown",
+              );
+              return (
+                wrapper?.classList.contains("is-open") &&
+                dropdown?.classList.contains("is-active") &&
+                dropdown?.getAttribute("aria-expanded") === "true"
+              );
+            },
+            { timeout: 5000 },
+            selectId,
+          );
+        } catch {
+          console.warn(
+            `⚠️ Dropdown #${selectId} belum terbuka dalam 5s, tetap lanjut...`,
+          );
+        }
+
+        const searchHandle = await page.evaluateHandle((id) => {
+          const wrapper = document.getElementById(id)?.closest(".choices");
+          return (
+            wrapper?.querySelector(
+              ".choices__list--dropdown input.choices__input--cloned",
+            ) ?? null
+          );
+        }, selectId);
+        const searchEl = searchHandle.asElement();
+
+        if (searchEl) {
+          const targetText = await page.evaluate(
+            (id, val) => {
+              const wrapper = document.getElementById(id)?.closest(".choices");
+              const listbox = wrapper?.querySelector(
+                '.choices__list--dropdown .choices__list[role="listbox"]',
+              );
+              const item = listbox?.querySelector(
+                `.choices__item[data-value="${val}"][data-choice-selectable]`,
+              );
+              return item?.textContent?.trim() ?? null;
+            },
+            selectId,
+            strValue,
+          );
+
+          if (targetText) {
+            const searchKeyword = targetText;
+            await searchEl.type(searchKeyword, { delay: 30 });
+            await moduleExport.helpers.delay(400);
+            console.log(`🔎 Mengetik "${searchKeyword}" untuk memfilter opsi`);
+
+            const itemStillVisible = await page.evaluate(
+              (id, val) => {
+                const wrapper = document
+                  .getElementById(id)
+                  ?.closest(".choices");
+                const listbox = wrapper?.querySelector(
+                  '.choices__list--dropdown .choices__list[role="listbox"]',
+                );
+                return !!listbox?.querySelector(
+                  `.choices__item[data-value="${val}"][data-choice-selectable]`,
+                );
+              },
+              selectId,
+              strValue,
+            );
+
+            if (!itemStillVisible) {
+              console.log(
+                "⚠️ Item tidak ditemukan setelah filter, membersihkan search...",
+              );
+              await page.evaluate((id) => {
+                const wrapper = document
+                  .getElementById(id)
+                  ?.closest(".choices");
+                const input = wrapper?.querySelector(
+                  "input.choices__input--cloned",
+                );
+                if (input) {
+                  input.value = "";
+                  input.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+              }, selectId);
+              await moduleExport.helpers.delay(300);
+            }
+          }
+        }
+
+        const itemHandle = await page.evaluateHandle(
+          (id, val) => {
+            const listbox = document
+              .getElementById(id)
+              ?.closest(".choices")
+              ?.querySelector(
+                ".choices__list--dropdown .choices__list[role='listbox']",
+              );
+            return (
+              listbox?.querySelector(
+                `.choices__item[data-value="${val}"][data-choice-selectable]`,
+              ) ?? null
+            );
+          },
+          selectId,
+          strValue,
+        );
+
+        const itemEl = itemHandle.asElement();
+        if (!itemEl) {
+          console.warn(
+            `⚠️ Item value="${strValue}" tidak ditemukan di dropdown #${selectId}`,
+          );
+          await page.keyboard.press("Escape");
+          await moduleExport.helpers.delay(200);
+        } else {
+          await page.evaluate(
+            (id, val) => {
+              const listbox = document
+                .getElementById(id)
+                ?.closest(".choices")
+                ?.querySelector(
+                  '.choices__list--dropdown .choices__list[role="listbox"]',
+                );
+              const item = listbox?.querySelector(
+                `.choices__item[data-value="${val}"][data-choice-selectable]`,
+              );
+              if (listbox && item) {
+                listbox.scrollTop =
+                  item.offsetTop -
+                  listbox.clientHeight / 2 +
+                  item.clientHeight / 2;
+              }
+            },
+            selectId,
+            strValue,
+          );
+
+          await moduleExport.helpers.delay(150);
+
+          const box = await itemEl.boundingBox();
+          if (box) {
+            const x = box.x + box.width / 2;
+            const y = box.y + box.height / 2;
+            await page.mouse.move(x, y, { steps: 5 });
+            await moduleExport.helpers.delay(80);
+            await page.mouse.down();
+            await moduleExport.helpers.delay(60);
+            await page.mouse.up();
+          } else {
+            await itemEl.evaluate((el) => el.click());
+          }
+
+          await moduleExport.helpers.delay(300);
+
+          const afterValue = await page.evaluate(
+            (id) => document.getElementById(id)?.value ?? null,
+            selectId,
+          );
+          if (afterValue === strValue) {
+            console.log(
+              `✅ Select #${selectId} berhasil dipilih: "${strValue}"`,
+            );
+            return true;
+          }
+          console.warn(
+            `⚠️ Item diklik tapi value belum sinkron (${afterValue} != ${strValue}), mencoba fallback...`,
+          );
+        }
+
+        await page.evaluate(() => document.body.click());
+        await moduleExport.helpers.delay(200);
+
+        const directResult = await page.evaluate(
+          (id, val) => {
+            try {
+              const select = document.getElementById(id);
+              if (!select) return false;
+
+              const wrapper = select.closest(".choices");
+              if (!wrapper) return false;
+
+              const listbox = wrapper.querySelector(
+                '.choices__list--dropdown .choices__list[role="listbox"]',
+              );
+              const targetItem = listbox?.querySelector(
+                `.choices__item[data-value="${val}"][data-choice-selectable]`,
+              );
+
+              if (!targetItem) return false;
+
+              const itemText = targetItem.textContent.trim();
+
+              let option = select.querySelector(`option[value="${val}"]`);
+              if (!option) {
+                select.innerHTML = `<option value="${val}" data-custom-properties="[object Object]">${itemText}</option>`;
+              }
+
+              const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLSelectElement.prototype,
+                "value",
+              )?.set;
+              if (nativeSetter) nativeSetter.call(select, val);
+              else select.value = val;
+
+              const singleList = wrapper.querySelector(
+                ".choices__list--single",
+              );
+              if (singleList) {
+                const existingItem = singleList.querySelector(".choices__item");
+                if (existingItem) {
+                  existingItem.textContent = itemText;
+                  existingItem.dataset.value = val;
+                  existingItem.classList.remove("choices__placeholder");
+                  existingItem.setAttribute("aria-selected", "true");
+                }
+              }
+
+              listbox
+                ?.querySelectorAll(".choices__item.is-selected")
+                .forEach((el) => {
+                  el.classList.remove("is-selected", "is-highlighted");
+                  el.removeAttribute("aria-selected");
+                });
+              targetItem.classList.add("is-selected");
+              targetItem.setAttribute("aria-selected", "true");
+
+              select.dispatchEvent(new Event("change", { bubbles: true }));
+
+              return select.value === val;
+            } catch {
+              return false;
+            }
+          },
+          selectId,
+          strValue,
+        );
+
+        if (directResult) {
+          console.log(
+            `✅ Select #${selectId} berhasil via direct DOM fallback: "${strValue}"`,
+          );
+          return true;
+        }
+
+        console.error(`❌ Semua metode gagal untuk select #${selectId}`);
+        return false;
+      } catch (error) {
+        console.error(
+          `❌ Error pada setChoicesSelectByValue #${selectId}: ${error.message}`,
+        );
         return false;
       }
     },
@@ -531,7 +895,7 @@ const moduleExport = {
           while (year < startYear) {
             const prevEnabled = await page.evaluate(() => {
               const prevBtn = document.querySelector(
-                ".datepicker-controls .prev-btn"
+                ".datepicker-controls .prev-btn",
               );
               return !prevBtn.disabled;
             });
@@ -552,7 +916,7 @@ const moduleExport = {
               }
             } else {
               console.log(
-                "⚠️ Tombol prev nonaktif, tidak bisa navigasi lebih jauh"
+                "⚠️ Tombol prev nonaktif, tidak bisa navigasi lebih jauh",
               );
               break;
             }
@@ -561,7 +925,7 @@ const moduleExport = {
           while (year > endYear) {
             const nextEnabled = await page.evaluate(() => {
               const nextBtn = document.querySelector(
-                ".datepicker-controls .next-btn"
+                ".datepicker-controls .next-btn",
               );
               return !nextBtn.disabled;
             });
@@ -582,7 +946,7 @@ const moduleExport = {
               }
             } else {
               console.log(
-                "⚠️ Tombol next nonaktif, tidak bisa navigasi lebih jauh"
+                "⚠️ Tombol next nonaktif, tidak bisa navigasi lebih jauh",
               );
               break;
             }
@@ -603,7 +967,7 @@ const moduleExport = {
         await page.evaluate((targetMonth) => {
           const monthIndex = targetMonth - 1;
           const monthCells = document.querySelectorAll(
-            ".datepicker-view .month"
+            ".datepicker-view .month",
           );
           if (monthCells && monthCells[monthIndex]) {
             monthCells[monthIndex].click();
@@ -621,7 +985,7 @@ const moduleExport = {
       try {
         const daySelected = await page.evaluate((targetDay) => {
           const dayCells = document.querySelectorAll(
-            ".datepicker-view .datepicker-cell.day:not(.prev):not(.next):not(.disabled)"
+            ".datepicker-view .datepicker-cell.day:not(.prev):not(.next):not(.disabled)",
           );
 
           for (const cell of dayCells) {
