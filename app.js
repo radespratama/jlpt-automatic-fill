@@ -97,6 +97,21 @@ async function runDashboard() {
         }));
       },
     },
+    {
+      type: "list",
+      name: "autoPay",
+      message: "💳 Otomatis sampai pembayaran?",
+      choices: [
+        {
+          name: "Ya - Lanjut sampai klik Bayar (QRIS)",
+          value: true,
+        },
+        {
+          name: "Tidak - Berhenti setelah submit data",
+          value: false,
+        },
+      ],
+    },
   ]);
 
   const students = await loadCredential(answers.credential);
@@ -390,6 +405,111 @@ async function runDashboard() {
     await common.setUploadLocalProfilePhoto(page, students.photoName);
 
     console.log("#12. CHECKBOX AGREEMENT SUCCESSFULLY SELECTED");
+
+    // === STEP 13: Klik "Submit Data" pertama ===
+    console.log("#13. Mengklik tombol 'Submit Data' pertama...");
+    await page.waitForSelector("button.themeBtn.themeBtn--wide", { visible: true, timeout: 5000 });
+    await page.evaluate(() => {
+      const buttons = [...document.querySelectorAll("button.themeBtn.themeBtn--wide")];
+      const submitBtn = buttons.find(btn => btn.textContent.trim() === "Submit Data");
+      if (submitBtn) submitBtn.click();
+    });
+    console.log("✅ Tombol 'Submit Data' pertama diklik");
+
+    // === STEP 14: Tunggu tombol "Ubah Data" muncul ===
+    console.log("#14. Menunggu tombol 'Ubah Data' muncul...");
+    await page.waitForFunction(() => {
+      const buttons = [...document.querySelectorAll("button.themeBtn.themeBtn--outline")];
+      return buttons.some(btn => btn.textContent.trim() === "Ubah Data");
+    }, { timeout: 15000 });
+    console.log("✅ Tombol 'Ubah Data' terdeteksi");
+
+    await helpers.delay(500);
+
+    // === STEP 15: Klik "Submit Data" kedua ===
+    console.log("#15. Mengklik tombol 'Submit Data' kedua...");
+    await page.evaluate(() => {
+      const buttons = [...document.querySelectorAll("button.themeBtn.themeBtn--wide")];
+      const submitBtn = buttons.find(btn => btn.textContent.trim() === "Submit Data");
+      if (submitBtn) submitBtn.click();
+    });
+    console.log("✅ Tombol 'Submit Data' kedua diklik");
+
+    // === STEP 16: Tunggu modal dialog muncul (display: block) lalu klik "Pilih metode pembayaran" ===
+    console.log("#16. Menunggu dialog pembayaran muncul...");
+    await page.waitForFunction(() => {
+      const modal = document.querySelector(".modal-alert.show");
+      if (!modal) return false;
+      const style = window.getComputedStyle(modal);
+      return style.display === "block";
+    }, { timeout: 15000 });
+    console.log("✅ Dialog pembayaran terdeteksi (display: block)");
+
+    await helpers.delay(500);
+
+    console.log("#17. Mengklik tombol 'Pilih metode pembayaran'...");
+    await page.evaluate(() => {
+      const modal = document.querySelector(".modal-alert.show");
+      if (!modal) return;
+      const buttons = [...modal.querySelectorAll("button.themeBtn.themeBtn--wide")];
+      const payBtn = buttons.find(btn => btn.textContent.trim() === "Pilih metode pembayaran");
+      if (payBtn) payBtn.click();
+    });
+    console.log("✅ Tombol 'Pilih metode pembayaran' diklik");
+
+    if (answers.autoPay) {
+      // === STEP 18: Tunggu payment modal muncul ===
+      console.log("#18. Menunggu dialog metode pembayaran muncul...");
+      await page.waitForFunction(() => {
+        const modal = document.querySelector(".payment-modal.show");
+        if (!modal) return false;
+        const style = window.getComputedStyle(modal);
+        return style.display === "block";
+      }, { timeout: 15000 });
+      console.log("✅ Dialog metode pembayaran terdeteksi");
+
+      await helpers.delay(500);
+
+      // === STEP 19: Pilih radio QRIS ===
+      console.log("#19. Memilih metode pembayaran QRIS...");
+      await page.evaluate(() => {
+        const label = document.querySelector('label[for="qris"]');
+        if (label) label.click();
+      });
+      await helpers.delay(300);
+
+      // Verifikasi radio QRIS terpilih
+      const qrisSelected = await page.evaluate(() => {
+        const radio = document.getElementById("qris");
+        return radio ? radio.checked : false;
+      });
+
+      if (!qrisSelected) {
+        console.log("⚠️ Label click gagal, mencoba direct click...");
+        await page.click("#qris");
+        await helpers.delay(300);
+      }
+      console.log("✅ QRIS terpilih");
+
+      // === STEP 20: Tunggu tombol "Bayar" aktif (disabled hilang) lalu klik ===
+      console.log("#20. Menunggu tombol 'Bayar' aktif...");
+      await page.waitForFunction(() => {
+        const btn = document.querySelector(".payment-modal__footer .themeBtn.payment-modal__button");
+        return btn && !btn.disabled;
+      }, { timeout: 10000 });
+      console.log("✅ Tombol 'Bayar' sudah aktif");
+
+      await helpers.delay(300);
+
+      console.log("#21. Mengklik tombol 'Bayar'...");
+      await page.evaluate(() => {
+        const btn = document.querySelector(".payment-modal__footer .themeBtn.payment-modal__button");
+        if (btn) btn.click();
+      });
+      console.log("✅ Tombol 'Bayar' diklik");
+    } else {
+      console.log("ℹ️ Mode tanpa auto-payment, berhenti di sini.");
+    }
   } catch (error) {
     console.error("[AUTOMATION ERROR]:", error.message);
   } finally {
