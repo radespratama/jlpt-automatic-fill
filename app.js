@@ -128,7 +128,7 @@ async function runDashboard() {
     await page.goto("https://jlptonline.or.id/signin", {
       waitUntil: "networkidle2",
     });
-    await common.waitForCloudflare(page, 60000000);
+    await common.waitForCloudflare(page, 7200000);
 
     console.log("#3. Filling login credentials...");
     await page.waitForSelector(".auth");
@@ -142,7 +142,7 @@ async function runDashboard() {
 
     console.log("#4. Menunggu login manual...");
     await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 120000 });
-    await common.waitForCloudflare(page, 60000000);
+    await common.waitForCloudflare(page, 7200000);
 
     if (await page.$(".auth")) {
       throw new Error("#4.1 😒 Login failed - auth form still present");

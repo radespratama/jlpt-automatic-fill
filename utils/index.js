@@ -8,9 +8,11 @@ const moduleExport = {
     waitForCloudflare: async (page, timeout = 300000) => {
       const pollInterval = 1000;
       const logInterval = 5000;
+      const requiredClears = 3;
       const startTime = Date.now();
       let lastLogTime = 0;
       let detected = false;
+      let consecutiveClear = 0;
 
       while (Date.now() - startTime < timeout) {
         const blockingInfo = await page
@@ -42,13 +44,18 @@ const moduleExport = {
 
             return { isBlocking, type };
           })
-          .catch(() => ({ isBlocking: false, type: null }));
+          .catch(() => ({ isBlocking: true, type: "navigation" }));
 
         if (!blockingInfo.isBlocking) {
-          if (detected) {
-            console.log("✅ Halaman blocking selesai, melanjutkan proses...");
+          consecutiveClear++;
+          if (consecutiveClear >= requiredClears) {
+            if (detected) {
+              console.log("✅ Halaman blocking selesai, melanjutkan proses...");
+            }
+            return true;
           }
-          return true;
+        } else {
+          consecutiveClear = 0;
         }
 
         detected = true;
