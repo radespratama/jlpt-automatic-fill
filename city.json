@@ -1,0 +1,415 @@
+{
+  "BALI": {
+    "Kab. Badung": "5103",
+    "Kab. Bangli": "5106",
+    "Kab. Buleleng": "5108",
+    "Kab. Gianyar": "5104",
+    "Kab. Jembrana": "5101",
+    "Kab. Karangasem": "5107",
+    "Kab. Klungkung": "5105",
+    "Kab. Tabanan": "5102",
+    "Kota Denpasar": "5171"
+  },
+  "DKI JAKARTA": {
+    "Kab. Adm. Kep. Seribu": "3101",
+    "Kota Adm. Jakarta Barat": "3173",
+    "Kota Adm. Jakarta Pusat": "3171",
+    "Kota Adm. Jakarta Selatan": "3174",
+    "Kota Adm. Jakarta Timur": "3175",
+    "Kota Adm. Jakarta Utara": "3172"
+  },
+  "JAWA BARAT": {
+    "Kab. Bandung": "3204",
+    "Kab. Bandung Barat": "3217",
+    "Kab. Bekasi": "3216",
+    "Kab. Bogor": "3201",
+    "Kab. Ciamis": "3207",
+    "Kab. Cianjur": "3203",
+    "Kab. Cirebon": "3209",
+    "Kab. Garut": "3205",
+    "Kab. Indramayu": "3212",
+    "Kab. Karawang": "3215",
+    "Kab. Kuningan": "3208",
+    "Kab. Majalengka": "3210",
+    "Kab. Pangandaran": "3218",
+    "Kab. Purwakarta": "3214",
+    "Kab. Subang": "3213",
+    "Kab. Sukabumi": "3202",
+    "Kab. Sumedang": "3211",
+    "Kab. Tasikmalaya": "3206",
+    "Kota Bandung": "3273",
+    "Kota Banjar": "3279",
+    "Kota Bekasi": "3275",
+    "Kota Bogor": "3271",
+    "Kota Cimahi": "3277",
+    "Kota Cirebon": "3274",
+    "Kota Depok": "3276",
+    "Kota Sukabumi": "3272",
+    "Kota Tasikmalaya": "3278"
+  },
+  "Yogyakarta": {
+    "Kab. Bantul": "3402",
+    "Kab. Gunungkidul": "3403",
+    "Kab. Kulon Progo": "3401",
+    "Kab. Sleman": "3404",
+    "Kota Yogyakarta": "3471"
+  },
+  "ACEH": [
+    {
+      "value": 1101,
+      "label": "Kab. Aceh Selatan"
+    },
+    {
+      "value": 1102,
+      "label": "Kab. Aceh Tenggara"
+    },
+    {
+      "value": 1103,
+      "label": "Kab. Aceh Timur"
+    },
+    {
+      "value": 1104,
+      "label": "Kab. Aceh Tengah"
+    },
+    {
+      "value": 1105,
+      "label": "Kab. Aceh Barat"
+    },
+    {
+      "value": 1106,
+      "label": "Kab. Aceh Besar"
+    },
+    {
+      "value": 1107,
+      "label": "Kab. Pidie"
+    },
+    {
+      "value": 1108,
+      "label": "Kab. Aceh Utara"
+    },
+    {
+      "value": 1109,
+      "label": "Kab. Simeulue"
+    },
+    {
+      "value": 1110,
+      "label": "Kab. Aceh Singkil"
+    },
+    {
+      "value": 1111,
+      "label": "Kab. Bireuen"
+    },
+    {
+      "value": 1112,
+      "label": "Kab. Aceh Barat Daya"
+    },
+    {
+      "value": 1113,
+      "label": "Kab. Gayo Lues"
+    },
+    {
+      "value": 1114,
+      "label": "Kab. Aceh Jaya"
+    },
+    {
+      "value": 1115,
+      "label": "Kab. Nagan Raya"
+    },
+    {
+      "value": 1116,
+      "label": "Kab. Aceh Tamiang"
+    },
+    {
+      "value": 1117,
+      "label": "Kab. Bener Meriah"
+    },
+    {
+      "value": 1118,
+      "label": "Kab. Pidie Jaya"
+    },
+    {
+      "value": 1171,
+      "label": "Kota Banda Aceh"
+    },
+    {
+      "value": 1172,
+      "label": "Kota Sabang"
+    },
+    {
+      "value": 1173,
+      "label": "Kota Lhokseumawe"
+    },
+    {
+      "value": 1174,
+      "label": "Kota Langsa"
+    },
+    {
+      "value": 1175,
+      "label": "Kota Subulussalam"
+    }
+  ],
+  "JAWA TIMUR": [
+    {
+      "value": 3501,
+      "label": "Kab. Pacitan"
+    },
+    {
+      "value": 3502,
+      "label": "Kab. Ponorogo"
+    },
+    {
+      "value": 3503,
+      "label": "Kab. Trenggalek"
+    },
+    {
+      "value": 3504,
+      "label": "Kab. Tulungagung"
+    },
+    {
+      "value": 3505,
+      "label": "Kab. Blitar"
+    },
+    {
+      "value": 3506,
+      "label": "Kab. Kediri"
+    },
+    {
+      "value": 3507,
+      "label": "Kab. Malang"
+    },
+    {
+      "value": 3508,
+      "label": "Kab. Lumajang"
+    },
+    {
+      "value": 3509,
+      "label": "Kab. Jember"
+    },
+    {
+      "value": 3510,
+      "label": "Kab. Banyuwangi"
+    },
+    {
+      "value": 3511,
+      "label": "Kab. Bondowoso"
+    },
+    {
+      "value": 3512,
+      "label": "Kab. Situbondo"
+    },
+    {
+      "value": 3513,
+      "label": "Kab. Probolinggo"
+    },
+    {
+      "value": 3514,
+      "label": "Kab. Pasuruan"
+    },
+    {
+      "value": 3515,
+      "label": "Kab. Sidoarjo"
+    },
+    {
+      "value": 3516,
+      "label": "Kab. Mojokerto"
+    },
+    {
+      "value": 3517,
+      "label": "Kab. Jombang"
+    },
+    {
+      "value": 3518,
+      "label": "Kab. Nganjuk"
+    },
+    {
+      "value": 3519,
+      "label": "Kab. Madiun"
+    },
+    {
+      "value": 3520,
+      "label": "Kab. Magetan"
+    },
+    {
+      "value": 3521,
+      "label": "Kab. Ngawi"
+    },
+    {
+      "value": 3522,
+      "label": "Kab. Bojonegoro"
+    },
+    {
+      "value": 3523,
+      "label": "Kab. Tuban"
+    },
+    {
+      "value": 3524,
+      "label": "Kab. Lamongan"
+    },
+    {
+      "value": 3525,
+      "label": "Kab. Gresik"
+    },
+    {
+      "value": 3526,
+      "label": "Kab. Bangkalan"
+    },
+    {
+      "value": 3527,
+      "label": "Kab. Sampang"
+    },
+    {
+      "value": 3528,
+      "label": "Kab. Pamekasan"
+    },
+    {
+      "value": 3529,
+      "label": "Kab. Sumenep"
+    },
+    {
+      "value": 3571,
+      "label": "Kota Kediri"
+    },
+    {
+      "value": 3572,
+      "label": "Kota Blitar"
+    },
+    {
+      "value": 3573,
+      "label": "Kota Malang"
+    },
+    {
+      "value": 3574,
+      "label": "Kota Probolinggo"
+    },
+    {
+      "value": 3575,
+      "label": "Kota Pasuruan"
+    },
+    {
+      "value": 3576,
+      "label": "Kota Mojokerto"
+    },
+    {
+      "value": 3577,
+      "label": "Kota Madiun"
+    },
+    {
+      "value": 3578,
+      "label": "Kota Surabaya"
+    },
+    {
+      "value": 3579,
+      "label": "Kota Batu"
+    }
+  ],
+  "BANTEN": [
+    {
+      "value": 3601,
+      "label": "Kab. Pandeglang"
+    },
+    {
+      "value": 3602,
+      "label": "Kab. Lebak"
+    },
+    {
+      "value": 3603,
+      "label": "Kab. Tangerang"
+    },
+    {
+      "value": 3604,
+      "label": "Kab. Serang"
+    },
+    {
+      "value": 3671,
+      "label": "Kota Tangerang"
+    },
+    {
+      "value": 3672,
+      "label": "Kota Cilegon"
+    },
+    {
+      "value": 3673,
+      "label": "Kota Serang"
+    },
+    {
+      "value": 3674,
+      "label": "Kota Tangerang Selatan"
+    }
+  ],
+  "BENGKULU": [
+    {
+      "value": 3601,
+      "label": "Kab. Pandeglang"
+    },
+    {
+      "value": 3602,
+      "label": "Kab. Lebak"
+    },
+    {
+      "value": 3603,
+      "label": "Kab. Tangerang"
+    },
+    {
+      "value": 3604,
+      "label": "Kab. Serang"
+    },
+    {
+      "value": 3671,
+      "label": "Kota Tangerang"
+    },
+    {
+      "value": 3672,
+      "label": "Kota Cilegon"
+    },
+    {
+      "value": 3673,
+      "label": "Kota Serang"
+    },
+    {
+      "value": 3674,
+      "label": "Kota Tangerang Selatan"
+    }
+  ],
+  "KALIMANTAN TIMUR": [
+    {
+      "value": 6401,
+      "label": "Kab. Paser"
+    },
+    {
+      "value": 6402,
+      "label": "Kab. Kutai Kartanegara"
+    },
+    {
+      "value": 6403,
+      "label": "Kab. Berau"
+    },
+    {
+      "value": 6407,
+      "label": "Kab. Kutai Barat"
+    },
+    {
+      "value": 6408,
+      "label": "Kab. Kutai Timur"
+    },
+    {
+      "value": 6409,
+      "label": "Kab. Penajam Paser Utara"
+    },
+    {
+      "value": 6411,
+      "label": "Kab. Mahakam Ulu"
+    },
+    {
+      "value": 6471,
+      "label": "Kota Balikpapan"
+    },
+    {
+      "value": 6472,
+      "label": "Kota Samarinda"
+    },
+    {
+      "value": 6474,
+      "label": "Kota Bontang"
+    }
+  ]
+}
