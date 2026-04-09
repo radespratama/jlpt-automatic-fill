@@ -155,8 +155,34 @@ async function runDashboard() {
     console.log("\x1b[36m Silakan selesaikan reCAPTCHA lalu klik tombol Login secara manual. \x1b[0m");
     console.log("\x1b[33m Automation akan otomatis melanjutkan setelah login berhasil... \x1b[0m\n");
 
-    console.log("#4. Menunggu login manual...");
-    await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 120000 });
+    console.log("#4. Menunggu login manual (tanpa timeout, selama masih di halaman login)...");
+    {
+      const pollInterval = 2000;
+      const logInterval = 30000;
+      let lastLogTime = Date.now();
+
+      while (true) {
+        const stillOnLogin = await page.evaluate(() => {
+          const url = window.location.href;
+          const hasAuthForm = !!document.querySelector(".auth");
+          return url.includes("/signin") || hasAuthForm;
+        }).catch(() => true);
+
+        if (!stillOnLogin) break;
+
+        const now = Date.now();
+        if (now - lastLogTime >= logInterval) {
+          console.log("⏳ Masih menunggu reCAPTCHA & login manual...");
+          lastLogTime = now;
+        }
+
+        await helpers.delay(pollInterval);
+      }
+
+      // Tunggu halaman baru selesai loading
+      await page.waitForFunction(() => document.readyState === "complete", { timeout: 30000 }).catch(() => {});
+      await helpers.delay(1000);
+    }
     await common.waitForCloudflare(page, 7200000);
 
     if (await page.$(".auth")) {
