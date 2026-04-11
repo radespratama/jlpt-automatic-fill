@@ -35,7 +35,7 @@ project-bot/
 #### Limitations
 
 - There are still some limitations when automatically filling in dropdown/select fields. However, if you encounter any issues, you can fill them in manually.
-- Because the JLPT website uses reCAPTCHA, you must click the CAPTCHA and the submit button manually. We still cannot select data from dropdown inputs—you need to do it manually!
+- Because the JLPT website uses reCAPTCHA, you must click the CAPTCHA and the submit button manually.
 
 #### Flow
 
